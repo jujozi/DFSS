@@ -21,7 +21,9 @@ print("Anwendungsbeispiel der Bibliothek der Vorlesung DFSS")
     
 """ Import einer Matlab .mat Datei"""
 
-data = dfss.read_mfile('Test','Klebermenge')
+data = dfss.read_mfile('Test','Klebermenge','Klebermenge','m / mg')
+data.print_info()
+data.plot_info()
 
 
 
