@@ -15,10 +15,13 @@ from IPython import get_ipython
 get_ipython().run_line_magic('matplotlib', 'inline')
 import dsff_bib as dfss
 
-
+    
 """ Test """
 print("Anwendungsbeispiel der Bibliothek der Vorlesung DFSS")
-
+    
 """ Import einer Matlab .mat Datei"""
 
-X=dfss.read_mat('Klebermenge')
+data = dfss.read_mfile('Test','Klebermenge')
+
+
+
