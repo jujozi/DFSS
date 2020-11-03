@@ -117,6 +117,14 @@ class read_mfile:
         #pt.add_row(['Relative Summenhäufigkeit H(x): ',self.X_rel_sum_freq])
         print(pt)
         
+    def print_q(self):
+        pt = PrettyTable()
+        pt.field_names = ['Bezeichnung','Wert']
+        pt.add_row(['Quartile bei 25%',self.X_q25])
+        pt.add_row(['Quartile bei 50%',self.X_q50])
+        pt.add_row(['Quartile bei 75%',self.X_q75])
+        print(pt)
+        
         
     def plot_info(self):
         yLimDelta =  self.X_max - self.X_min
@@ -158,6 +166,25 @@ class read_mfile:
         ax2.set_xlabel(self.messgroese+' '+self.einheit)
         ax2.set_ylabel('Relative Summenhäufigkeit H(m)')
         ax2.axis([yLimMin, yLimMax, 0, 1])
+        
+    def plot_summLine(self):
+        yLimDelta =  self.X_max - self.X_min
+        yLimMin = self.X_min - yLimDelta * 0.1
+        yLimMax = self.X_max + yLimDelta * 0.1
+        fig = plt.figure(1, figsize=(6, 4))
+        f, ax = plt.subplots()
+        Xsort = np.append(np.append(48,np.sort(self.data)),54)
+        Psum = np.append(np.append([0,],np.arange(1,self.N+1)/self.N),1)
+        ax.step(Xsort,Psum, color='b', where='post', linewidth=2)
+        ax.grid(True, which='both', axis='both', linestyle='--')
+        ax.set_xlabel(self.messgroese+' '+self.einheit)
+        ax.set_ylabel('Relative Summenhäufigkeit H(m)')
+        ax.axis([yLimMin, yLimMax, 0, 1])
+        
+        #plot Quartile
+        plt.axvline(x=self.X_q25,color='r', linestyle='--', label='vline1.5custom')
+        plt.axvline(x=self.X_q50,color='r', linestyle='--', label='vline1.5custom')
+        plt.axvline(x=self.X_q75,color='r', linestyle='--', label='vline1.5custom')
         
 
     def read_mat(self):
@@ -295,9 +322,9 @@ class read_mfile:
 
 
 
-Glasfaser = read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
-Glasfaser.histogram(10)
-Glasfaser.histogram_tabel()
+#Glasfaser = read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
+#Glasfaser.histogram(10)
+#Glasfaser.histogram_tabel()
 
 
 

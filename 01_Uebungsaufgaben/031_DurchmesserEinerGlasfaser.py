@@ -42,13 +42,7 @@ Schiefe. Was können Sie über die Schiefe der Verteilung aussagen?
 '''
 Glasfaser.print_info()
 Glasfaser.plot_info()
-
-pt = PrettyTable()
-pt.field_names = ['Bezeichnung','Wert']
-pt.add_row(['Quartile bei 25%',Glasfaser.X_q25])
-pt.add_row(['Quartile bei 50%',Glasfaser.X_q50])
-pt.add_row(['Quartile bei 75%',Glasfaser.X_q75])
-print(pt)
+Glasfaser.print_q()
 
 '''
 d) Stellen Sie den Box-Plot in MATLAB dar. Interpretieren Sie den Box-Plot. Was können Sie am
