@@ -97,23 +97,25 @@ class read_mfile:
         
     def print_info(self):
         pt = PrettyTable()
-        pt.field_names('Bezeichnung','Wert')
-        print(' ')
-        print('Arithmetischer Mittelwert: ', self.X_mean)
-        print('Median:', self.X_med )
-        print('Spannweite:', self.X_delta )
-        print(' ')
-        print('Varianz: ', self.X_var)
-        print('Standardabweichung: ', self.X_std)
-        print(' ')
-        print('Inter-Quartil-Range: ', self.X_iqr)
-        print('Quartilkoeffizient der Schiefe:', self.X_skew_qua )
-        print('Momentenkoeffizient der Schiefe:', self.X_skew_mom )
-        print(' ')
-        print('Absolute Häufigkeit hA(x): ', self.X_freq)
-        print('RelativeHaeufigkeit h(x): ', self.X_rel_freq )
-        print('Absolute Summenhäufigkeit HA(x): ',self.X_sum_freq)
-        print('Relative Summenhäufigkeit H(x): ',self.X_rel_sum_freq)
+        pt.field_names = ['Bezeichnung','Wert']
+        pt.align['Bezeichnung'] = 'r'
+        pt.align['Wert'] = 'l'
+        pt.add_row(['Arithmetischer Mittelwert', self.X_mean])
+        pt.add_row(['Median', self.X_med ])
+        pt.add_row(['Spannweite', self.X_delta ])
+        pt.add_row([' ',' '])
+        pt.add_row(['Varianz', self.X_var])
+        pt.add_row(['Standardabweichung', self.X_std])
+        pt.add_row([' ',' '])
+        pt.add_row(['Inter-Quartil-Range', self.X_iqr])
+        pt.add_row(['Quartilkoeffizient der Schiefe', self.X_skew_qua ])
+        pt.add_row(['Momentenkoeffizient der Schiefe', self.X_skew_mom ])
+        #pt.add_row([' ',' '])
+        #pt.add_row(['Absolute Häufigkeit hA(x): ', self.X_freq])
+        #pt.add_row(['RelativeHaeufigkeit h(x): ', self.X_rel_freq ])
+        #pt.add_row(['Absolute Summenhäufigkeit HA(x): ',self.X_sum_freq])
+        #pt.add_row(['Relative Summenhäufigkeit H(x): ',self.X_rel_sum_freq])
+        print(pt)
         
         
     def plot_info(self):
@@ -186,7 +188,10 @@ class read_mfile:
     def calc_SSVI(self):
         self.X_var = np.var(self.data, ddof=1)
         self.X_std = np.std(self.data,ddof=1)
-        self.X_iqr = np.quantile(self.data,0.75) - np.quantile(self.data,0.25)
+        self.X_q25 = np.quantile(self.data,0.25)
+        self.X_q50 = np.quantile(self.data,0.50)
+        self.X_q75 = np.quantile(self.data,0.75)
+        self.X_iqr = self.X_q75 - self.X_q25
         return
         
     """Berechnen der Schiefe"""

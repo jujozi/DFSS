@@ -25,8 +25,6 @@ Gegeben sind Messwerte für den Durchmesser einer Glasfaser. Die Messwerte sind 
 """
 Glasfaser = dfss.read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
 
-Glasfaser.print_info()
-
 
 """
 b) Teilen Sie die Daten in 10 Klassen ein und erstellen Sie eine Tabelle mit absoluter Häufigkeit.
@@ -36,7 +34,26 @@ MATLAB als Säulendiagramm dar.
 
 Glasfaser.histogram(10)
 Glasfaser.histogram_tabel()
+
+'''
+c) Berechnen Sie die Quartile der Messwerte, also 25%, 50% und 75% Quartil. Geben Sie für alle
+Kennwerte auch die entsprechende Formel an und berechnen Sie den Quartilkoeffizient der
+Schiefe. Was können Sie über die Schiefe der Verteilung aussagen?
+'''
+Glasfaser.print_info()
 Glasfaser.plot_info()
+
+pt = PrettyTable()
+pt.field_names = ['Bezeichnung','Wert']
+pt.add_row(['Quartile bei 25%',Glasfaser.X_q25])
+pt.add_row(['Quartile bei 50%',Glasfaser.X_q50])
+pt.add_row(['Quartile bei 75%',Glasfaser.X_q75])
+print(pt)
+
+'''
+d) Stellen Sie den Box-Plot in MATLAB dar. Interpretieren Sie den Box-Plot. Was können Sie am
+Box-Plot ablesen?
+'''
 
 
 
