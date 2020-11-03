@@ -18,10 +18,15 @@ import dsff_bib as dfss
     
 """ Test """
 print("Anwendungsbeispiel der Bibliothek der Vorlesung DFSS")
+
+name='Test'
+datei='01_DataUebung/AbweichungenSoll'
+messgroese='test'
+einheit='einehit'
     
 """ Import einer Matlab .mat Datei"""
 
-data = dfss.read_mfile('Test','Klebermenge','Klebermenge','m / mg')
+data = dfss.read_mfile(name,datei,messgroese,einheit)
 data.print_info()
 data.plot_info()
 

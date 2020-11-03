@@ -6,15 +6,43 @@ Bibliothek der wichtigsten Funktionon in Design for Six Sigma
 
 """ Bibliotheken importieren"""
 import numpy as np
+import scipy as sp
 #import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import skew
 from scipy.io import loadmat
 from IPython import get_ipython
 get_ipython().run_line_magic('matplotlib', 'inline')
+from prettytable import PrettyTable
+
+# Berechnung der Warscheinlichkeit aus der Anzahl moeglicher und guenstiger
+# Faelle
+def P(Mm,Mg):
+    """ 
+    Mm - Anzahl moeglicher Ereignisse
+    Mg - Anzahl guensitger Ereignisse
+    
+    Berechnet die Warscheinlichkeit eines guenstigen Ereignisses
+    """
+    return Mg/Mm
+
+# Kombination ohne Wiederholung
+def anzKombination(N,K):
+    return sp.special.comb(N,K)
+
+def strProzent(x):
+    return str(round(x*100,4))+'%'
+
+
 
 class read_mfile:
+    """
+    Einlesen einer Matlab-Datei
+    """
     def __init__(self,name,mfile,messgroese,einheit):
+        """
+        Name,mfile,messgroese,einheit
+        """
         self.name = name
         self.mfile = mfile
         
@@ -35,6 +63,7 @@ class read_mfile:
         self.X_mean = 0
         self.X_med = 0
         self.clac_LMM()
+        self.X_delta = self.X_max - self.X_min
         
         """Streuungskennwerte"""
         self.X_var = 0
@@ -55,19 +84,29 @@ class read_mfile:
         self.X_rel_sum_freq = 0
         self.calc_haufigkeit()
         
+        self.class_data = 0
+        self.class_data_n = 0
+        
+        self.hist_binCenter = 0
+        self.hist_data = 0
+        self.hist_edges = 0
+        
         
         
         
         
     def print_info(self):
+        pt = PrettyTable()
+        pt.field_names('Bezeichnung','Wert')
         print(' ')
         print('Arithmetischer Mittelwert: ', self.X_mean)
         print('Median:', self.X_med )
+        print('Spannweite:', self.X_delta )
         print(' ')
         print('Varianz: ', self.X_var)
         print('Standardabweichung: ', self.X_std)
-        print('Inter-Quartil-Range: ', self.X_iqr)
         print(' ')
+        print('Inter-Quartil-Range: ', self.X_iqr)
         print('Quartilkoeffizient der Schiefe:', self.X_skew_qua )
         print('Momentenkoeffizient der Schiefe:', self.X_skew_mom )
         print(' ')
@@ -119,9 +158,13 @@ class read_mfile:
         ax2.axis([yLimMin, yLimMax, 0, 1])
         
 
-    """Einlesen und Umsortieren der Daten aus dem .mat-file"""
     def read_mat(self):
-        data = loadmat(self.mfile)['data']
+        """Einlesen und Umsortieren der Daten aus dem .mat-file"""
+        readFile = loadmat(self.mfile)
+        try:
+            data = readFile['values']
+        except:
+            print('mFile read faild: No values found')
         return np.array(data).reshape(data.shape[0]*data.shape[1])
     
     """Bestimmung Datenumfang"""
@@ -152,21 +195,104 @@ class read_mfile:
         self. X_skew_qua = (np.quantile(self.data,0.75) - 2*np.quantile(self.data,0.5) + np.quantile(self.data,0.25))/self.X_iqr
         return
     
-    """ Berechnung der absoluten und relativen Häufigkeit sowie der absoluten"""
-    """ und relativen Summenhäufigkeit"""
     def calc_haufigkeit(self):
+        """
+        Berechnung der absoluten und relativen Häufigkeit sowie der absoluten
+        und relativen Summenhäufigkeit
+
+        Returns
+        -------
+        None.
+
+        """
         self.X_freq, self.Klassengrenzen = np.histogram(self.data, bins=np.arange(np.floor(self.X_min)-0.5, np.ceil(self.X_max)+1.5))
         self.X_rel_freq = self.X_freq/self.N
         self.X_sum_freq = np.cumsum(self.X_freq)
         self.X_rel_sum_freq = self.X_sum_freq/self.N
         Klassenmitten = np.arange(np.floor(self.X_min),np.ceil(self.X_max)+1)
         
+    def sortKlass(self,class_n):
+        '''
+        Sortiert in Klassen ein
+
+        Parameters
+        ----------
+        class_n : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        class_data : TYPE
+            DESCRIPTION.
+
+        '''
+        #Daten holen
+        data=self.data
+        X_min = self.X_min
+        X_delta = self.X_delta
+        count = self.N
         
+        #Besimme der Klassenbreite
+        class_range = X_delta/class_n
+        class_borders = np.zeros(class_n)
+        #Klassengrenzen nach oben errechnen
+        for i,border in enumerate(class_borders):
+            class_borders[i] = X_min+(i+1)*class_range
+        #class_borders = np.insert(class_borders, 0, self.X_min)
+        #Klassen einteilen
+        class_data = [0] * class_n
+        class_data_n = [0] * class_n
+        for i in range(class_n):
+            class_current = np.where(data<=class_borders[i])[0]
+            class_data[i] = data[class_current]
+            class_data_n[i] = len(class_data[i])
+            data = np.delete(data,class_current)
+            
+        self.class_data = class_data
+        self.class_borders = class_borders
+        self.class_data_n = class_data_n
+        self.class_data_p = [x / count for x in class_data_n]
+        return class_data
+        
+    def histogram(self,bins_n):
+        '''
+        Generiert Histogrammdaten
+
+        Parameters
+        ----------
+        bins_n : TYPE
+            Klassenanzahl.
+
+        Returns
+        -------
+        hist_data_rel : TYPE
+            Relative Haufigkeitsverteilung.
+
+        '''
+        
+        data = self.data
+        hist_rel,hist_edges =  np.histogram(data, bins=bins_n, density=True)
+        hist_abs,hist_edges =  np.histogram(data, bins=bins_n, density=False)
+        self.hist_binCenter = [(hist_edges[i]+hist_edges[i+1])/2 for i in range(len(hist_edges)-1)]
+        self.hist_rel = hist_rel
+        self.hist_abs = hist_abs
+        self.hist_edges = hist_edges
+        return hist_rel
     
+    def histogram_tabel(self):
+        pt =PrettyTable()
+        pt.add_column(self.messgroese,self.hist_binCenter)
+        pt.add_column('Rel',self.hist_abs)
+        pt.add_column('Abs',self.hist_rel)
+        
+        print(pt)
+        
 
 
 
-
+Glasfaser = read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
+Glasfaser.histogram(10)
+Glasfaser.histogram_tabel()
 
 
 
