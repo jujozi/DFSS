@@ -47,13 +47,13 @@ Durchflussmessung.read_m('00_Musterklausuren/00_Klausur_Daten/Durchflussmessung.
 '''
 a) Stellen Sie für die Messreihe die Häufigkeitsverteilung als Histogramm dar.
 '''
+Durchflussmessung.print_info()
 Durchflussmessung.plot_info()
 '''
 b) Schätzen Sie auf Basis der Stichprobe den Mittelwert und die Standardabweichung der
 Durchflussmessung. Geben Sie für γ = 95 % den Konfidenzbereich für beide Größen an.
 Gehen Sie dabei von einer normalverteilten Grundgesamtheit aus.
 '''
-Durchflussmessung.print_info()
 Durchflussmessung.calc_koefiBereich(0.94)
 Durchflussmessung.print_koefiBereich()
 '''
