@@ -26,7 +26,8 @@ werte sind als Daten verfügbar (Halbleitermaterial.mat).
 
 
 
-Halbleiter = dfss.read_mfile('Halbleiter','01_DataUebung/Halbleitermaterial.mat','Verunreinigung','M/ppm')
+Halbleiter = dfss.DataSet('Halbleiter','Verunreinigung','M/ppm')
+Halbleiter.read_m('01_DataUebung/Halbleitermaterial.mat')
 
 '''
 a) Geben Sie für die Messung alle Lage- und Streuungswerte an. Geben Sie für alle Kennwerte auch

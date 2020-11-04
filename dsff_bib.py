@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 #import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.stats import skew
+from scipy.stats import skew, t, norm, chi2, f
 from scipy.io import loadmat
 from IPython import get_ipython
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -34,55 +34,49 @@ def strProzent(x):
     return str(round(x*100,4))+'%'
 
 
+# Konfidenzbereich hinzufuegen
 
-class read_mfile:
-    """
-    Einlesen einer Matlab-Datei
-    """
-    def __init__(self,name,mfile,messgroese,einheit):
-        """
-        Name,mfile,messgroese,einheit
-        """
-        self.name = name
-        self.mfile = mfile
+class DataSet:
+    def __init__(self,name,messgroese,einheit):
+        '''
         
+
+        Parameters
+        ----------
+        name : TYPE
+            DESCRIPTION.
+        messgroese : TYPE
+            DESCRIPTION.
+        einheit : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        '''
+        self.name = name
         self.messgroese = messgroese
         self.einheit = einheit
         
-        print("Einlesen fuer " +name+ " der Datei "+mfile)
-        
-        """Daten aus dem .mat-file"""
-        self.data = self.read_mat()
-        
-        self.X_min = 0
-        self.X_max = 0
+        self.X_min = 0                          #Minimaler Wert 
+        self.X_max = 0                          #Maximaler Wert
         self.N = 0
-        self.calc_Datenumpfang()
         
-        """Lagekennwerte"""
-        self.X_mean = 0
-        self.X_med = 0
-        self.clac_LMM()
-        self.X_delta = self.X_max - self.X_min
+        self.X_mean = 0                         #Mittelwert der Stichprobe
+        self.X_med = 0                          #Median der Stichprobe
         
-        """Streuungskennwerte"""
-        self.X_var = 0
-        self.X_std = 0
+        self.X_var = 0                          #Varianz
+        self.X_std = 0                          #Standardabweichung
         self.X_iqr = 0
-        self.calc_SSVI()
         
-        """Schiefe"""
         self.X_skew_mom = 0
-        self. X_skew_qua = 0
-        self.calc_schiefe()
+        self.X_skew_qua = 0
         
-        """  absolute und relative Häufigkeit"""
-        """  absolute und relative Summenhäufigkeit"""
         self.X_freq = 0
         self.X_rel_freq = 0
         self.X_sum_freq = 0
         self.X_rel_sum_freq = 0
-        self.calc_haufigkeit()
         
         self.class_data = 0
         self.class_data_n = 0
@@ -91,6 +85,48 @@ class read_mfile:
         self.hist_data = 0
         self.hist_edges = 0
         
+        self.discard_min = 0                    # Ausschussgrenze minimal
+        self.discard_max = 0                    # Ausschussgrenze maximal
+        
+    def read_m(self,mfile):
+        self.mfile = mfile
+        print("Einlesen fuer " +self.name+ " der Datei "+mfile)
+        
+        """Daten aus dem .mat-file"""
+        # np.rshape
+        try:
+            readFile = loadmat(self.mfile)
+            readFile_keys = list(readFile.keys())[3:]
+        except:
+            print('mFile read: faild')
+        else:
+            print('mFile read: found keys: ' + str(readFile_keys))
+            print('mFile read: read sucsess')
+        data = np.empty([0,1])
+        for i,key in enumerate(readFile_keys):
+            data_read = np.reshape(readFile[key],(-1,1))
+            data = np.concatenate((data,data_read), axis=0)
+        print('mFile read: concatenate all data')
+        
+        self.data = data
+        
+        self.calc_Datenumpfang()
+        
+        """Lagekennwerte"""
+        self.clac_LMM()
+        
+        """Streuungskennwerte"""
+
+        self.calc_SSVI()
+        
+        """Schiefe"""
+        self.calc_schiefe()
+        
+        """  absolute und relative Häufigkeit"""
+        """  absolute und relative Summenhäufigkeit"""
+        self.calc_haufigkeit()
+        
+        self.X_delta = self.X_max - self.X_min
         
         
         
@@ -126,10 +162,13 @@ class read_mfile:
         print(pt)
         
         
+        
     def plot_info(self):
         yLimDelta =  self.X_max - self.X_min
         yLimMin = self.X_min - yLimDelta * 0.1
         yLimMax = self.X_max + yLimDelta * 0.1
+        xLimMin = 0
+        xLimMax = 0.6
         """ Grafische Darstellung der einzelnen Messwete als Streudiagramm """
         fig = plt.figure(1, figsize=(12, 4))
         ax1, ax2 = fig.subplots(1,2)
@@ -148,15 +187,21 @@ class read_mfile:
         ax2.set_ylabel(self.messgroese+' '+self.einheit)
         ax2.axis([0, 2, yLimMin, yLimMax])
         
+    
         
         """ Grafische Darstellung der relativen Häufigkeiten als Histogramm """
         fig = plt.figure(2, figsize=(12, 4))
         ax1, ax2 = fig.subplots(1,2)
-        ax1.hist(self.data, self.Klassengrenzen, histtype='bar' , color='b', weights=np.ones(self.N)/self.N, rwidth=1)
+        ax1.hist(self.data, 10, density=True, facecolor='b')
+        #ax1.hist(self.data, self.Klassengrenzen, histtype='bar' , color='b', weights=np.ones(self.N)/self.N, rwidth=1)
         ax1.grid(True, which='both', axis='both', linestyle='--')
         ax1.set_xlabel(self.messgroese+' '+self.einheit)
         ax1.set_ylabel('Relative Häufigkeit h(m)')
-        ax1.axis([yLimMin, yLimMax, 0, 0.6])
+        ax1.axis([yLimMin, yLimMax, xLimMin, xLimMax])
+        
+        xplot = np.linspace(self.X_min,self.X_max,100)
+        self.data_predict = norm.pdf(xplot,self.X_mean,self.X_std)
+        ax1.plot(xplot,self.data_predict,'r')
         
         """ Grafische Darstellung der relativen Summenhäufigkeit """
         Xsort = np.append(np.append(48,np.sort(self.data)),54)
@@ -186,16 +231,42 @@ class read_mfile:
         plt.axvline(x=self.X_q50,color='r', linestyle='--', label='vline1.5custom')
         plt.axvline(x=self.X_q75,color='r', linestyle='--', label='vline1.5custom')
         
-
-    def read_mat(self):
-        """Einlesen und Umsortieren der Daten aus dem .mat-file"""
-        readFile = loadmat(self.mfile)
-        try:
-            data = readFile['values']
-        except:
-            print('mFile read faild: No values found')
-        return np.array(data).reshape(data.shape[0]*data.shape[1])
     
+    def calc_koefiBereich(self,gamma):
+        '''
+        Bestimmen des Konfidenzbereich von Mittelwert und Standardabweichung
+
+        Returns
+        -------
+        None.
+
+        '''
+        N = self.N
+        xquer = self.X_mean
+        s = self.X_std
+        
+        self.gamma = gamma
+        
+        c1 = t.ppf((1-gamma)/2,N-1)
+        c2 = t.ppf((1+gamma)/2,N-1)
+        self.X_mean_c1 = xquer - c2*s/np.sqrt(N)
+        self.X_mean_c2 = xquer - c1*s/np.sqrt(N)
+        c1 = chi2.ppf((1-gamma)/2,N-1)
+        c2 = chi2.ppf((1+gamma)/2,N-1)
+        self.X_std_c1 = s*np.sqrt(N/c2)
+        self.X_std_c2 = s*np.sqrt(N/c1)
+        
+    def print_koefiBereich(self):
+        pt = PrettyTable()
+        pt.field_names = ['Wert','Konfidenzbereich bei gamma = ' + strProzent(self.gamma)]
+        pt.align['Wert'] = 'r'
+        pt.align['Konfidenzbereich'] = 'l'
+        pt.add_row(['Mittelwert', str(round(self.X_mean_c1,3))+' <= '+str(round(self.X_mean,3))+' <= '+str(round(self.X_mean_c2,3)) ])
+        pt.add_row(['Mittelwert', str(round(self.X_std_c1,3))+' <= '+str(round(self.X_std,3))+' <= '+str(round(self.X_std_c2,3)) ])
+        
+        print(pt)
+        
+        
     """Bestimmung Datenumfang"""
     def calc_Datenumpfang(self):
         self.X_min = np.amin(self.data)
@@ -242,6 +313,33 @@ class read_mfile:
         self.X_sum_freq = np.cumsum(self.X_freq)
         self.X_rel_sum_freq = self.X_sum_freq/self.N
         Klassenmitten = np.arange(np.floor(self.X_min),np.ceil(self.X_max)+1)
+        
+    def calc_ausschuss(self,min,max):
+        self.discard_min = min
+        self.discard_max = max
+        
+        self.discard_min_p = test = norm.cdf((min-self.X_mean)/self.X_std)
+        self.discard_max_p = test = 1-norm.cdf((max-self.X_mean)/self.X_std)
+        self.discard_min_max_p = self.discard_min_p + self.discard_max_p
+        
+        return self.discard_min_max_p
+    
+    def print_ausschuss(self):
+        pt = PrettyTable()
+        pt.field_names = ['Grenzen','Warscheinlichkeit']
+        pt.add_row(['//'+str(round(self.discard_min,4))+'//]-------------',strProzent(self.discard_min_p)])
+        pt.add_row(['-------------[//'+str(round(self.discard_max,4))+'//',strProzent(self.discard_max_p)])
+        pt.add_row(['//'+str(round(self.discard_min,4))+'//]---[//'+str(round(self.discard_max,4))+'//',strProzent(self.discard_min_max_p)])
+
+        print(pt)
+        
+    def calc_ausschuss_toleranz(self,soll,toleranz):
+        p = soll/100*toleranz
+        min_val = soll-toleranz
+        max_val = soll+toleranz
+        
+        self.calc_ausschuss(min_val,max_val)
+        
         
     def sortKlass(self,class_n):
         '''
@@ -320,14 +418,24 @@ class read_mfile:
         print(pt)
         
 
+#Guetefunktion
+
+#Annahmebereich
 
 
 #Glasfaser = read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
 #Glasfaser.histogram(10)
 #Glasfaser.histogram_tabel()
+'''
+name = 'Durchfluss'
+messgroese = 'Durchflussmessung Q_IST'
+einheit = 'm^3/h'
+
+Durchflussmessung = DataSet(name,messgroese,einheit)
+Durchflussmessung.read_m('00_Musterklausuren/00_Klausur_Daten/Durchflussmessung.mat')
 
 
-
+'''
 
 
 

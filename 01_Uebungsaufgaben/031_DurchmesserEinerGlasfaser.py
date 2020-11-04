@@ -23,7 +23,8 @@ import dsff_bib as dfss
 Gegeben sind Messwerte für den Durchmesser einer Glasfaser. Die Messwerte sind als Daten verfügbar
 (Glasfaser.mat).
 """
-Glasfaser = dfss.read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
+Glasfaser = dfss.DataSet('Glasfaser','Glasfaserduchmesser','d/mymD')
+Glasfaser.read_m('01_DataUebung/Glasfaser.mat')
 
 
 """
