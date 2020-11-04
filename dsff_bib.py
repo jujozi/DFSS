@@ -169,22 +169,27 @@ class DataSet:
         yLimMax = self.X_max + yLimDelta * 0.1
         xLimMin = 0
         xLimMax = 0.6
+        data = self.data
+        N =self.N
+        
+        strMessgroese = self.messgroese
+        strEinheit = self.einheit
         """ Grafische Darstellung der einzelnen Messwete als Streudiagramm """
         fig = plt.figure(1, figsize=(12, 4))
         ax1, ax2 = fig.subplots(1,2)
-        n = np.arange(1,self.N+1)
-        ax1.plot(n,self.data, 'bo', Linewidth = 2, label = 'Stichproben')
+        n = np.arange(1,N+1)
+        ax1.plot(n,data, 'bo', Linewidth = 2, label = 'Stichproben')
         ax1.grid(True, which='both', axis='both', linestyle='--')
-        ax1.axis([1, self.N, yLimMin, yLimMax])
+        ax1.axis([1, N, yLimMin, yLimMax])
         ax1.legend(loc='upper right')
         ax1.set_xlabel('Stichprobe n')
-        ax1.set_ylabel(self.messgroese+' '+self.einheit)
+        ax1.set_ylabel(strMessgroese+' '+strEinheit)
         
         """ Erstellen eines Boxplt """
-        ax2.boxplot(self.data)
+        ax2.boxplot(data)
         ax2.grid(True, which='both', axis='both', linestyle='--')
         ax2.set_xlabel('Messreihe ')
-        ax2.set_ylabel(self.messgroese+' '+self.einheit)
+        ax2.set_ylabel(strMessgroese+' '+strEinheit)
         ax2.axis([0, 2, yLimMin, yLimMax])
         
     
@@ -192,23 +197,23 @@ class DataSet:
         """ Grafische Darstellung der relativen Häufigkeiten als Histogramm """
         fig = plt.figure(2, figsize=(12, 4))
         ax1, ax2 = fig.subplots(1,2)
-        ax1.hist(self.data, 10, density=True, facecolor='b')
-        #ax1.hist(self.data, self.Klassengrenzen, histtype='bar' , color='b', weights=np.ones(self.N)/self.N, rwidth=1)
+        ax1.hist(data, int(np.sqrt(N)*1.3), facecolor='b')
+        #ax1.hist(data, self.Klassengrenzen, histtype='bar' , color='b', weights=np.ones(N)/N, rwidth=1)
         ax1.grid(True, which='both', axis='both', linestyle='--')
-        ax1.set_xlabel(self.messgroese+' '+self.einheit)
+        ax1.set_xlabel(strMessgroese+' '+strEinheit)
         ax1.set_ylabel('Relative Häufigkeit h(m)')
         ax1.axis([yLimMin, yLimMax, xLimMin, xLimMax])
         
-        xplot = np.linspace(self.X_min,self.X_max,100)
+        xplot = np.linspace(yLimMin,yLimMax,100)
         self.data_predict = norm.pdf(xplot,self.X_mean,self.X_std)
         ax1.plot(xplot,self.data_predict,'r')
         
         """ Grafische Darstellung der relativen Summenhäufigkeit """
-        Xsort = np.append(np.append(48,np.sort(self.data)),54)
-        Psum = np.append(np.append([0,],np.arange(1,self.N+1)/self.N),1)
+        Xsort = np.sort(np.reshape(data,-1))
+        Psum = np.arange(1,N+1)/N
         ax2.step(Xsort,Psum, color='b', where='post', linewidth=2)
         ax2.grid(True, which='both', axis='both', linestyle='--')
-        ax2.set_xlabel(self.messgroese+' '+self.einheit)
+        ax2.set_xlabel(strMessgroese+' '+strEinheit)
         ax2.set_ylabel('Relative Summenhäufigkeit H(m)')
         ax2.axis([yLimMin, yLimMax, 0, 1])
         
@@ -426,16 +431,14 @@ class DataSet:
 #Glasfaser = read_mfile('Glasfaser','01_DataUebung/Glasfaser.mat','Glasfaserduchmesser','d/mymD')
 #Glasfaser.histogram(10)
 #Glasfaser.histogram_tabel()
-'''
+
 name = 'Durchfluss'
 messgroese = 'Durchflussmessung Q_IST'
 einheit = 'm^3/h'
 
 Durchflussmessung = DataSet(name,messgroese,einheit)
 Durchflussmessung.read_m('00_Musterklausuren/00_Klausur_Daten/Durchflussmessung.mat')
-
-
-'''
+Durchflussmessung.plot_info()
 
 
 
